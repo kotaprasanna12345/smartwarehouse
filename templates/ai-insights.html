@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+
+{% block title %}SmartStock AI Copilot & Insights — SmartStock AI{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>SmartStock AI Copilot & Predictive Insights</h1>
+    <p>Conversational warehouse intelligence, automated root cause analysis, and demand forecasting.</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn-hero-optimize" onclick="window.triggerOptimizerModal ? window.triggerOptimizerModal() : null">
+      <i class="fas fa-bolt"></i> ⚡ Run 1-Click Optimizer
+    </button>
+  </div>
+</div>
+
+<!-- SPLIT SCREEN COPILOT CONTAINER -->
+<div class="copilot-container">
+
+  <!-- LEFT: AI COPILOT CHAT PANEL -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="brand-icon-box" style="width:34px; height:34px; font-size:1rem; background:linear-gradient(135deg, var(--secondary), var(--primary));">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div>
+          <h3 style="font-size:0.95rem; font-weight:800;">SmartStock AI Assistant</h3>
+          <p style="font-size:0.72rem; color:var(--text-muted); display:flex; align-items:center; gap:4px;">
+            <span class="live-dot" style="width:6px; height:6px;"></span> Connected to SQLite Live Telemetry
+          </p>
+        </div>
+      </div>
+      <span class="confidence-tag">NLP Engine Active</span>
+    </div>
+
+    <!-- Chat Messages Feed -->
+    <div class="chat-messages" id="chatMessagesList">
+      <div class="message-bubble assistant">
+        <strong>👋 Welcome to SmartStock AI Copilot!</strong><br/>
+        I am your operational intelligence assistant with direct access to live warehouse telemetry, inventory stocks, order pipelines, and zone congestion maps.<br/><br/>
+        Try asking me anything about current stockouts, bottleneck root causes, or fulfillment optimization strategies below!
+      </div>
+    </div>
+
+    <!-- Chat Input Box & Quick Chips -->
+    <div class="chat-input-box">
+      <div class="quick-prompt-chips" id="dynamicChipsContainer">
+        <button class="prompt-chip">"Which products need restocking?"</button>
+        <button class="prompt-chip">"Why are orders delayed?"</button>
+        <button class="prompt-chip">"Which warehouse zone is congested?"</button>
+        <button class="prompt-chip">"How can I improve today's fulfillment?"</button>
+        <button class="prompt-chip">"Predict tomorrow's demand"</button>
+      </div>
+
+      <form class="chat-input-form" id="copilotChatForm">
+        <input type="text" id="copilotQueryInput" placeholder="Ask AI Copilot about inventory, delays, zones, or recommendations..." autocomplete="off">
+        <button type="submit" class="btn-primary" style="padding:0 18px;">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- RIGHT: DYNAMIC LIVE AI INSIGHTS FEED -->
+  <div style="display:flex; flex-direction:column; gap:16px;">
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <div>
+        <h3 style="font-size:1.05rem; font-weight:800; font-family:'Outfit', sans-serif;">Predictive Insights</h3>
+        <p style="font-size:0.75rem; color:var(--text-muted);">Proactive anomaly detection & opportunities</p>
+      </div>
+      <span class="nav-badge primary">4 Active</span>
+    </div>
+
+    <div class="insights-feed" id="insightsFeedList">
+      <div style="padding:24px; text-align:center; color:var(--text-muted);">
+        Loading predictive intelligence cards...
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/ai-insights.js') }}"></script>
+{% endblock %}

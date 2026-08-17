@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+
+{% block title %}Settings & Demo Controls — SmartStock AI{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>System Settings & Demo Controls</h1>
+    <p>Operational thresholds, presentation demo configurations, and database state management.</p>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+
+  <!-- CARD 1: HACKATHON DEMO PRESENTATION CONTROLS -->
+  <div class="table-card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+    <div style="display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border-color); padding-bottom:12px;">
+      <div class="brand-icon-box" style="width:34px; height:34px; font-size:1rem; background:linear-gradient(135deg, var(--secondary), var(--primary));">
+        <i class="fas fa-gamepad"></i>
+      </div>
+      <div>
+        <h3 style="font-size:1rem; font-weight:800;">Hackathon Presentation Tools</h3>
+        <p style="font-size:0.75rem; color:var(--text-muted);">Interactive triggers for live judge demonstrations</p>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-input); border-radius:var(--radius-md); padding:16px; font-size:0.82rem; display:flex; flex-direction:column; gap:10px;">
+      <div style="font-weight:700; color:var(--text-primary);">🎮 Quick Demo Actions:</div>
+      <p style="font-size:0.78rem; color:var(--text-secondary); line-height:1.45;">
+        Use the button below to restore the SQLite database to the pristine starting state (Zone C bottleneck, 6 low stock SKUs, 4 delayed orders).
+      </p>
+
+      <button class="btn-action" style="background:var(--bg-card); color:var(--danger); border-color:var(--danger); font-weight:700; width:100%; justify-content:center; padding:10px;" onclick="resetWarehouseDemo()">
+        <i class="fas fa-rotate-left"></i> Reset Database to Baseline Demo State
+      </button>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px; font-size:0.8rem;">
+      <div style="font-weight:700;">Demo Login Credentials:</div>
+      <div style="background:var(--bg-input); padding:10px; border-radius:var(--radius-sm); font-family:monospace; font-size:0.78rem;">
+        Email: <strong>admin@smartstock.ai</strong><br/>
+        Password: <strong>admin123</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD 2: WAREHOUSE OPERATIONAL THRESHOLDS -->
+  <div class="table-card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+    <div style="display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border-color); padding-bottom:12px;">
+      <div class="brand-icon-box" style="width:34px; height:34px; font-size:1rem; background:linear-gradient(135deg, var(--primary), var(--success));">
+        <i class="fas fa-sliders"></i>
+      </div>
+      <div>
+        <h3 style="font-size:1rem; font-weight:800;">Operational Rule Thresholds</h3>
+        <p style="font-size:0.75rem; color:var(--text-muted);">AI recommendation & risk trigger rules</p>
+      </div>
+    </div>
+
+    <form onsubmit="event.preventDefault(); showToast('Threshold preferences saved successfully.', 'success');" style="display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <label style="font-size:0.78rem; font-weight:600; display:block; margin-bottom:4px;">Bottleneck Congestion Alert Trigger (%)</label>
+        <input type="number" value="75" min="50" max="95" class="select-filter" style="width:100%;">
+      </div>
+
+      <div>
+        <label style="font-size:0.78rem; font-weight:600; display:block; margin-bottom:4px;">Safety Stock Depletion Horizon (Days)</label>
+        <input type="number" value="3" min="1" max="10" class="select-filter" style="width:100%;">
+      </div>
+
+      <div>
+        <label style="font-size:0.78rem; font-weight:600; display:block; margin-bottom:4px;">Order SLA Warning Buffer (Minutes)</label>
+        <input type="number" value="30" min="10" max="120" class="select-filter" style="width:100%;">
+      </div>
+
+      <button type="submit" class="btn-primary" style="justify-content:center; margin-top:6px;">
+        <i class="fas fa-save"></i> Save Threshold Rules
+      </button>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

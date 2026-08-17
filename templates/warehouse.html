@@ -1,0 +1,217 @@
+{% extends "layout.html" %}
+
+{% block title %}3D Digital Warehouse Twin & Spatial Map — SmartStock AI{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-title-group">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <h1>3D Digital Warehouse Twin</h1>
+      <span class="live-status-pill"><span class="live-dot"></span> LIVE 3D TWIN</span>
+    </div>
+    <p>Real-time 3D spatial simulation, multi-tier pallet racking, dynamic bottleneck beacons, and interactive picking route ribbons.</p>
+  </div>
+  <div class="header-actions">
+    <!-- 2D / 3D Mode Toggle -->
+    <div class="view-mode-toggle-group">
+      <button class="view-mode-btn active" id="viewMode3DBtn" onclick="switchWarehouseViewMode('3D')">
+        <i class="fas fa-cube"></i> 3D Twin
+      </button>
+      <button class="view-mode-btn" id="viewMode2DBtn" onclick="switchWarehouseViewMode('2D')">
+        <i class="fas fa-map"></i> 2D Plan
+      </button>
+    </div>
+
+    <!-- Picking Route Selector -->
+    <div class="route-select-wrapper">
+      <i class="fas fa-route" style="color:var(--primary);"></i>
+      <select id="pickingRouteOrderSelect" class="select-filter" style="height:38px;" onchange="visualizeOrderRoute(this.value)">
+        <option value="">Visualizing All Zones</option>
+        <option value="ORD-1092">Order #ORD-1092 (Zone A → Packing)</option>
+        <option value="ORD-1088">Order #ORD-1088 (Zone B → Packing)</option>
+        <option value="ORD-1099">Order #ORD-1099 (Zone C → Packing) ⚠️</option>
+      </select>
+    </div>
+
+    <button class="btn-action" onclick="refreshWarehouseView()">
+      <i class="fas fa-arrows-rotate"></i> Refresh View
+    </button>
+  </div>
+</div>
+
+<!-- BOTTLENECK DIAGNOSTIC BANNER -->
+<section id="mapBottleneckDiagnostic" style="margin-bottom:16px;"></section>
+
+<!-- 3D / 2D WAREHOUSE VIEWPORT CONTAINER -->
+<div class="warehouse-viewport-wrapper">
+
+  <!-- 3D VIEWPORT -->
+  <div class="warehouse-3d-viewport" id="warehouse3DViewport">
+    <!-- Three.js Canvas Container -->
+    <div id="threejsCanvasContainer" class="threejs-container"></div>
+
+    <!-- 3D Floating HUD Tooltip -->
+    <div class="hud-zone-tooltip" id="hudZoneTooltip" style="display:none;">
+      <div class="hud-tooltip-header">
+        <span class="hud-zone-code" id="hudZoneCode">ZONE C</span>
+        <span class="hud-zone-status" id="hudZoneStatus">CRITICAL</span>
+      </div>
+      <div class="hud-tooltip-body">
+        <div class="hud-metric-row"><span>Occupancy:</span> <strong id="hudOccupancy">87%</strong></div>
+        <div class="hud-metric-row"><span>Active Orders:</span> <strong id="hudActiveOrders">14</strong></div>
+        <div class="hud-metric-row"><span>Active Pickers:</span> <strong id="hudPickers">4</strong></div>
+        <div class="hud-metric-row"><span>Congestion:</span> <strong id="hudCongestion" style="color:var(--danger);">HIGH</strong></div>
+      </div>
+      <div class="hud-tooltip-footer">Click to inspect zone & rebalance</div>
+    </div>
+
+    <!-- 3D Camera Controls Toolbar (Overlay) -->
+    <div class="viewport-controls-overlay">
+      <div class="camera-preset-buttons">
+        <button class="cam-btn active" id="camIsometric" onclick="setCameraPreset('isometric')" title="Isometric 3D Overview">
+          <i class="fas fa-cube"></i> Isometric
+        </button>
+        <button class="cam-btn" id="camTopDown" onclick="setCameraPreset('topdown')" title="Top-Down Overhead Plan">
+          <i class="fas fa-border-all"></i> Top-Down
+        </button>
+        <button class="cam-btn" id="camZoneA" onclick="setCameraPreset('zoneA')" title="Focus Zone A (Fast Moving)">
+          <i class="fas fa-bolt"></i> Zone A
+        </button>
+        <button class="cam-btn" id="camZoneC" onclick="setCameraPreset('zoneC')" title="Focus Zone C (Bottleneck Area)">
+          <i class="fas fa-triangle-exclamation" style="color:var(--danger);"></i> Zone C
+        </button>
+        <button class="cam-btn" id="camCinematic" onclick="setCameraPreset('cinematic')" title="360° Cinematic Orbit Mode">
+          <i class="fas fa-video"></i> Cinematic 360°
+        </button>
+        <button class="cam-btn" id="camReset" onclick="reset3DCamera()" title="Reset Camera">
+          <i class="fas fa-compass"></i> Reset
+        </button>
+      </div>
+
+      <!-- Live Simulation Telemetry Pill -->
+      <div class="viewport-live-pill" id="viewportLivePill">
+        <span class="pulse-dot"></span>
+        <span id="pickerFleetStatus">5 Pickers Active | 2 Forklifts Moving</span>
+      </div>
+    </div>
+
+    <!-- Active Route HUD Legend (appears when route is selected) -->
+    <div class="route-hud-card" id="routeHudCard" style="display:none;">
+      <div class="route-hud-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <i class="fas fa-route" style="color:var(--primary);"></i>
+          <strong id="routeHudTitle">Order Route #ORD-1092</strong>
+        </div>
+        <button class="route-close-btn" onclick="clearPickingRoute()">&times;</button>
+      </div>
+      <div class="route-hud-stats">
+        <div>Distance: <strong id="routeHudDist">48m</strong></div>
+        <div>Est. Time: <strong id="routeHudTime">5.2 min</strong></div>
+        <div>Picks: <strong id="routeHudPicks">3 SKUs</strong></div>
+      </div>
+      <div class="route-hud-waypoints" id="routeHudWaypoints">
+        ZONE A &rarr; Rack A4 &rarr; Rack A8 &rarr; Packing &rarr; Shipping
+      </div>
+    </div>
+
+    <!-- 3D Legend Bar -->
+    <div class="viewport-legend-bar">
+      <div class="legend-item"><span class="legend-color-box" style="background:#10B981;"></span> Normal (&lt;50%)</div>
+      <div class="legend-item"><span class="legend-color-box" style="background:#F59E0B;"></span> Busy (50-75%)</div>
+      <div class="legend-item"><span class="legend-color-box" style="background:#EF4444; box-shadow:0 0 8px rgba(239,68,68,0.6);"></span> Bottleneck (&gt;75%)</div>
+      <div class="legend-item"><span class="legend-color-box" style="background:#2563EB;"></span> Selected Zone</div>
+      <div class="legend-item"><span class="legend-color-box" style="background:#06B6D4;"></span> Cold Storage</div>
+    </div>
+  </div>
+
+  <!-- 2D FALLBACK & SCHEMATIC PLAN VIEWPORT -->
+  <div class="warehouse-2d-viewport" id="warehouse2DViewport" style="display:none;">
+    <div class="map-legend" style="border-bottom:1px solid var(--border-color); padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-weight:700; font-size:0.88rem; display:flex; align-items:center; gap:8px;">
+        <i class="fas fa-layer-group" style="color:var(--primary);"></i> 2D Digital Floorplan Heatmap
+      </div>
+      <div class="legend-items">
+        <div><span class="legend-dot optimal"></span> Optimal (&lt;50%)</div>
+        <div><span class="legend-dot busy"></span> Busy (50-75%)</div>
+        <div><span class="legend-dot bottleneck"></span> Bottleneck (&gt;75%)</div>
+      </div>
+    </div>
+
+    <div class="warehouse-grid-layout" id="digitalMapContainer" style="padding:16px;">
+      <div style="grid-column:1 / -1; padding:32px; text-align:center; color:var(--text-muted);">
+        Loading spatial warehouse telemetry...
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ZONE INSPECTION SLIDE-IN DRAWER -->
+<div class="drawer-overlay" id="zoneDetailDrawerOverlay" onclick="closeDrawer('zoneDetailDrawer')"></div>
+<div class="drawer-panel" id="zoneDetailDrawer">
+  <div class="drawer-header">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div class="brand-icon-box" id="drawerZoneIconBox" style="width:38px; height:38px; font-size:1rem; background:linear-gradient(135deg, var(--primary), var(--secondary));">
+        <i class="fas fa-cubes"></i>
+      </div>
+      <div>
+        <h3 id="drawerZoneCode" style="font-size:1.15rem; font-weight:800; font-family:'Outfit', sans-serif;">ZONE</h3>
+        <p id="drawerZoneName" style="font-size:0.8rem; color:var(--text-secondary);">Zone Name</p>
+      </div>
+    </div>
+    <button class="modal-close-btn" onclick="closeDrawer('zoneDetailDrawer')"><i class="fas fa-times"></i></button>
+  </div>
+
+  <div class="drawer-body">
+    <!-- Zone Risk & Congestion Meter -->
+    <div class="zone-drawer-kpi-card" style="margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-size:0.8rem; font-weight:700; color:var(--text-secondary);">CONGESTION METRIC</span>
+        <span class="status-pill" id="drawerZoneStatusPill">OPTIMAL</span>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:8px;">
+        <span id="drawerZoneCongestionNum" style="font-size:1.8rem; font-weight:800; color:var(--danger);">84%</span>
+        <span style="font-size:0.8rem; color:var(--text-muted);">Aisle saturation</span>
+      </div>
+      <div class="gauge-bar-bg" style="height:6px; margin-top:8px;">
+        <div class="gauge-bar-fill danger" id="drawerZoneCongestionBar" style="width:84%;"></div>
+      </div>
+    </div>
+
+    <!-- Detailed Stats Grid -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; background:var(--bg-input); border-radius:var(--radius-md); padding:14px; font-size:0.82rem; margin-bottom:14px;">
+      <div>Category: <strong id="drawerZoneFocus">-</strong></div>
+      <div>Total Capacity: <strong id="drawerZoneCapacity">-</strong></div>
+      <div>Occupancy Level: <strong id="drawerZoneOccupied">-</strong></div>
+      <div>Active Pickers: <strong id="drawerZonePickers" style="color:var(--primary);">-</strong></div>
+      <div>Active Orders: <strong id="drawerZoneOrders">-</strong></div>
+      <div>Inventory Value: <strong id="drawerZoneValue" style="color:var(--success);">$148,500</strong></div>
+      <div>Environment: <strong id="drawerZoneTemp">-</strong></div>
+      <div>Speed Rating: <strong id="drawerZoneSpeed">-</strong></div>
+    </div>
+
+    <!-- AI Diagnostic & Recommended Action -->
+    <div class="ai-recommendation-box" style="margin-bottom:16px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+        <i class="fas fa-robot" style="color:var(--secondary);"></i>
+        <strong style="font-size:0.85rem;">AI Operational Diagnostic:</strong>
+      </div>
+      <p id="drawerZoneRecommendation" style="font-size:0.8rem; color:var(--text-secondary); line-height:1.45;">
+        Zone operations are currently running within optimal parameter tolerances.
+      </p>
+    </div>
+
+    <!-- Rebalance Action Button -->
+    <div>
+      <button class="btn-hero-optimize" id="drawerZoneRebalanceBtn" style="width:100%; justify-content:center; padding:12px; display:none;">
+        <i class="fas fa-users-gear"></i> Reassign 2 Pickers to this Zone (+18% Boost)
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/warehouse-3d.js') }}"></script>
+<script src="{{ url_for('static', filename='js/warehouse.js') }}"></script>
+{% endblock %}

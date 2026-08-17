@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🚀 SMARTSTOCK AI — Intelligent Warehouse Operations & Order Fulfillment Platform
 
 > **Hackathon Edition** — Real-time operational intelligence, spatial digital warehouse mapping, predictive bottleneck detection, AI-assisted stock replenishment, and 1-Click Warehouse Optimization.
@@ -274,3 +275,6 @@ Open your browser and navigate to:
 **Crafted with excellence for Hackathons — SmartStock AI 2026**
 #   s m a r t w a r e h o u s e  
  
+=======
+# smartwarehouse
+>>>>>>> dd806556fadcdb3f5fc6b493dcce099b52445d74

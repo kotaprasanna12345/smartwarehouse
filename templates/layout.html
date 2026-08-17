@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SmartStock AI — 3D Cyber Warehouse Intelligence{% endblock %}</title>
+  <meta name="description" content="Enterprise Smart Warehouse Operations Command Center with fully immersive 3D spatial twin, real-time telemetry, dynamic bottleneck optimizer, and AI Copilot.">
+  
+  <!-- Google Fonts: Inter, Outfit, & Orbitron for Cyber Headings -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800;900&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- DOMPurify for HTML/Markdown sanitization -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
+
+  <!-- Three.js & OrbitControls CDN for 3D Digital Warehouse Twin -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <!-- Custom Design System CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <!-- Ambient 3D Cyber Background Canvas -->
+  <canvas id="ambientCyberCanvas" class="ambient-cyber-canvas"></canvas>
+
+  <div class="app-container">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="{{ url_for('page_dashboard') }}" class="brand-logo">
+          <div class="brand-icon-box">
+            <i class="fas fa-boxes-stacked"></i>
+          </div>
+          <div style="display:flex; align-items:center;">
+            <span style="font-family:'Outfit', sans-serif;">SMARTSTOCK</span>
+            <span class="brand-badge">AI</span>
+          </div>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Core Operations</div>
+        <a href="{{ url_for('page_dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+          <i class="fas fa-tachometer-alt"></i>
+          <span>Command Center</span>
+        </a>
+        <a href="{{ url_for('page_inventory') }}" class="nav-item {% if active_page == 'inventory' %}active{% endif %}">
+          <i class="fas fa-box"></i>
+          <span>Inventory</span>
+          <span class="nav-badge danger" id="sidebarLowStockBadge">4 Low</span>
+        </a>
+        <a href="{{ url_for('page_orders') }}" class="nav-item {% if active_page == 'orders' %}active{% endif %}">
+          <i class="fas fa-shopping-cart"></i>
+          <span>Orders & Routing</span>
+        </a>
+        <a href="{{ url_for('page_fulfillment') }}" class="nav-item {% if active_page == 'fulfillment' %}active{% endif %}">
+          <i class="fas fa-dolly"></i>
+          <span>Fulfillment & Pick</span>
+        </a>
+        <a href="{{ url_for('page_warehouse') }}" class="nav-item {% if active_page == 'warehouse' %}active{% endif %}">
+          <i class="fas fa-cubes"></i>
+          <span>3D Warehouse Map</span>
+          <span class="nav-badge warning">Zone C</span>
+        </a>
+
+        <div class="nav-section-title">Intelligence & Insights</div>
+        <a href="{{ url_for('page_ai_insights') }}" class="nav-item {% if active_page == 'ai-insights' %}active{% endif %}">
+          <i class="fas fa-robot"></i>
+          <span>AI Copilot</span>
+          <span class="nav-badge primary">New</span>
+        </a>
+        <a href="{{ url_for('page_analytics') }}" class="nav-item {% if active_page == 'analytics' %}active{% endif %}">
+          <i class="fas fa-chart-line"></i>
+          <span>Analytics & SLA</span>
+        </a>
+        <a href="{{ url_for('page_alerts') }}" class="nav-item {% if active_page == 'alerts' %}active{% endif %}">
+          <i class="fas fa-bell"></i>
+          <span>Smart Alerts</span>
+        </a>
+
+        <div class="nav-section-title">System & Presentation</div>
+        <a href="{{ url_for('page_settings') }}" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+          <i class="fas fa-sliders"></i>
+          <span>Settings & Demo</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">SA</div>
+          <div class="user-info">
+            <div class="user-name">Admin Lead</div>
+            <div class="user-role">Warehouse Ops Lead</div>
+          </div>
+        </div>
+        <a href="{{ url_for('page_login') }}" title="Logout" style="color:var(--text-muted); font-size:1.1rem; padding:4px;">
+          <i class="fas fa-sign-out-alt"></i>
+        </a>
+      </div>
+    </aside>
+
+    <!-- MAIN WRAPPER -->
+    <div class="main-wrapper">
+
+      <!-- TOP NAVIGATION BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Toggle Sidebar">
+            <i class="fas fa-bars"></i>
+          </button>
+
+          <!-- Global Live Search -->
+          <div class="global-search-box">
+            <div class="search-input-wrapper">
+              <i class="fas fa-search"></i>
+              <input type="text" id="globalSearchInput" placeholder="Search SKUs, orders, zones..." autocomplete="off">
+            </div>
+            <div class="search-dropdown" id="globalSearchDropdown"></div>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Live Telemetry Status Pill -->
+          <div class="live-indicator" id="liveTelemetryBadge" title="Real-time backend telemetry feed">
+            <span class="live-dot"></span>
+            <span class="telemetry-badge-label" id="liveDataModeLabel">LIVE DATA</span>
+            <span id="liveTimestamp" class="telemetry-time">Synced 0s ago</span>
+          </div>
+
+          <!-- Hackathon Hero Action: 🎬 START HACKATHON DEMO -->
+          <button class="btn-hero-demo" id="heroStartDemoBtn" onclick="openHackathonDemoPlayer()" title="Launch Guided 9-Scene Judge Presentation Demo">
+            <i class="fas fa-play"></i>
+            <span>🎬 START HACKATHON DEMO</span>
+          </button>
+
+          <!-- Hero Action: ⚡ OPTIMIZE WAREHOUSE -->
+          <button class="btn-hero-optimize" id="heroOptimizeBtn" onclick="window.triggerOptimizerModal ? window.triggerOptimizerModal() : null" title="Run 1-Click AI Warehouse Optimization">
+            <i class="fas fa-bolt"></i>
+            <span>⚡ OPTIMIZE WAREHOUSE</span>
+          </button>
+
+          <!-- Hackathon Live Demo Mode Switch -->
+          <div class="demo-mode-toggle" title="Toggle live event simulation for presentation">
+            <span>🎮 Demo Mode</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="demoModeSwitch">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- Notifications Bell -->
+          <button class="icon-btn" id="notificationsBtn" title="Warehouse Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="badge-dot" id="notificationBadge"></span>
+          </button>
+
+          <!-- Notifications Dropdown Drawer -->
+          <div class="notifications-dropdown" id="notificationsDropdown">
+            <div class="notifications-header">
+              <h4>Warehouse Alerts</h4>
+              <a href="{{ url_for('page_alerts') }}" style="font-size:0.75rem; font-weight:600;">View All</a>
+            </div>
+            <div class="notifications-list" id="notificationsList">
+              <div style="padding:16px; text-align:center; color:var(--text-muted); font-size:0.8rem;">
+                Loading alerts...
+              </div>
+            </div>
+          </div>
+
+          <!-- Dark/Light Theme Toggle -->
+          <button class="icon-btn" id="themeToggleBtn" title="Toggle Dark/Light Mode">
+            <i class="fas fa-moon" id="themeIcon"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- PAGE CONTENT INJECTION -->
+      <main class="page-content">
+        {% block content %}{% endblock %}
+      </main>
+
+    </div>
+  </div>
+
+  <!-- ⚡ 1-CLICK OPTIMIZER MODAL -->
+  <div class="modal-overlay" id="optimizerModal">
+    <div class="modal-container" style="max-width:680px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="brand-icon-box" style="width:36px; height:36px; font-size:0.95rem; background:linear-gradient(135deg, #2563EB, #7C3AED);">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <div>
+            <h3 style="font-size:1.15rem; font-weight:800; font-family:'Outfit', sans-serif;">⚡ WAREHOUSE OPTIMIZATION ENGINE</h3>
+            <p style="font-size:0.75rem; color:var(--text-muted);">Real-time AI workload rebalancing & stock replenishment</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('optimizerModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Progress Animation Box -->
+        <div id="optimizerProgressBox" style="display:flex; flex-direction:column; gap:16px; padding:24px 0;">
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div class="spinner-ai-glow">
+              <i class="fas fa-microchip fa-spin" style="font-size:1.6rem; color:var(--primary);"></i>
+            </div>
+            <div style="flex:1;">
+              <span id="optimizerStatusStep" style="font-size:0.72rem; text-transform:uppercase; font-weight:700; color:var(--primary); letter-spacing:0.5px;">STEP 1 OF 5</span>
+              <div id="optimizerStatusLabel" style="font-weight:700; font-size:0.92rem; margin-top:2px;">Analyzing inventory velocity & stockout hazards...</div>
+            </div>
+          </div>
+          <div class="gauge-bar-bg" style="height:8px; border-radius:999px;">
+            <div class="gauge-bar-fill primary" id="optimizerProgressBar" style="width:15%; transition: width 0.4s ease;"></div>
+          </div>
+          <div class="optimizer-step-indicators" id="optimizerStepBadges">
+            <span class="step-badge active" id="optStep1">1. Inventory</span>
+            <span class="step-badge" id="optStep2">2. Orders & SLA</span>
+            <span class="step-badge" id="optStep3">3. Pickers</span>
+            <span class="step-badge" id="optStep4">4. Bottlenecks</span>
+            <span class="step-badge" id="optStep5">5. Optimization</span>
+          </div>
+        </div>
+
+        <!-- Results Display Box -->
+        <div id="optimizerResultsBox" style="display:none;">
+          <div id="optimizerResultsContent"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-action" onclick="closeModal('optimizerModal')">Close</button>
+        <button class="btn-primary" onclick="closeModal('optimizerModal'); if(window.location.pathname!='/dashboard') window.location.href='/dashboard';">
+          <i class="fas fa-check"></i> View Command Center
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎬 9-SCENE HACKATHON GUIDED DEMO MODAL -->
+  <div class="modal-overlay" id="hackathonDemoModal">
+    <div class="modal-container demo-player-container" style="max-width:760px;">
+      <div class="modal-header" style="background:linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(124, 58, 237, 0.08));">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="brand-icon-box" style="width:38px; height:38px; font-size:1.05rem; background:linear-gradient(135deg, #7C3AED, #06B6D4);">
+            <i class="fas fa-film"></i>
+          </div>
+          <div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h3 style="font-size:1.15rem; font-weight:800; font-family:'Outfit', sans-serif;">🎬 SMARTSTOCK AI — HACKATHON DEMO</h3>
+              <span class="simulation-pill">SIMULATION</span>
+            </div>
+            <p style="font-size:0.75rem; color:var(--text-muted);">Guided 9-Scene Judge Demonstration Flow</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeHackathonDemoPlayer()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding:20px 24px;">
+        <!-- Scene Progress Tracker Bar -->
+        <div class="demo-timeline-tracker">
+          <div class="demo-timeline-progress" id="demoTimelineProgress" style="width:11%;"></div>
+          <div class="demo-scene-pills" id="demoScenePills">
+            <!-- 9 Scene Steps injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Scene Stage Display Card -->
+        <div class="demo-scene-card" id="demoSceneCard">
+          <div class="demo-scene-header">
+            <span class="demo-scene-badge" id="demoSceneBadge">SCENE 1 / 9</span>
+            <h4 class="demo-scene-title" id="demoSceneTitle">Healthy Warehouse Operations</h4>
+          </div>
+          <div class="demo-scene-content" id="demoSceneContent">
+            <!-- Content injected by demo-mode.js -->
+          </div>
+          <div class="demo-scene-visual" id="demoSceneVisual">
+            <!-- Interactive Visual Preview -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="btn-action" id="demoPrevBtn" onclick="navigateDemoScene(-1)">
+            <i class="fas fa-chevron-left"></i> Previous
+          </button>
+          <button class="btn-action" id="demoAutoPlayBtn" onclick="toggleDemoAutoPlay()">
+            <i class="fas fa-play" id="demoPlayIcon"></i> <span id="demoPlayLabel">Auto-Play (5s)</span>
+          </button>
+          <button class="btn-action" onclick="resetWarehouseDemo()" title="Reset to baseline">
+            <i class="fas fa-rotate-left"></i> Reset
+          </button>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="btn-primary" id="demoNextBtn" onclick="navigateDemoScene(1)">
+            <span>Next Scene</span> <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Global Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/optimizer.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/demo-mode.js') }}"></script>
+
+  <!-- Page-Specific Script Injection -->
+  {% block scripts %}{% endblock %}
+</body>
+</html>

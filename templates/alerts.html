@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+
+{% block title %}Smart Alerts Center — SmartStock AI{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Smart Alerts & Exception Center</h1>
+    <p>Real-time exception management, stockout early warnings, and SLA breach preventions.</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn-action" onclick="markAllAlertsRead()">
+      <i class="fas fa-check-double"></i> Mark All as Read
+    </button>
+  </div>
+</div>
+
+<!-- 3 SUMMARY STATS -->
+<section class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-label">Unread Alerts</span>
+      <div class="kpi-icon primary"><i class="fas fa-bell"></i></div>
+    </div>
+    <div class="kpi-value" id="statUnreadAlerts">0</div>
+    <div class="kpi-comparison">Requiring operator review</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-label">Critical Exceptions</span>
+      <div class="kpi-icon danger"><i class="fas fa-circle-exclamation"></i></div>
+    </div>
+    <div class="kpi-value" id="statCriticalAlerts" style="color:var(--danger);">0</div>
+    <div class="kpi-comparison">Immediate action required</div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-label">Operational Warnings</span>
+      <div class="kpi-icon warning"><i class="fas fa-triangle-exclamation"></i></div>
+    </div>
+    <div class="kpi-value" id="statWarningAlerts" style="color:var(--warning);">0</div>
+    <div class="kpi-comparison">Approaching tolerance limit</div>
+  </div>
+</section>
+
+<!-- ALERTS LIST & FILTERS -->
+<div class="table-card" style="padding:20px;">
+  <!-- Filters Bar -->
+  <div class="table-toolbar" style="padding:0 0 16px 0; border-bottom:1px solid var(--border-color); margin-bottom:16px;">
+    <div class="toolbar-filters">
+      <!-- Search Input -->
+      <div class="search-input-wrapper" style="width:240px;">
+        <i class="fas fa-search"></i>
+        <input type="text" id="alertSearchInput" placeholder="Filter alerts by keyword...">
+      </div>
+
+      <!-- Severity Filter -->
+      <select class="select-filter" id="alertSeverityFilter">
+        <option value="All">All Severities</option>
+        <option value="critical">Critical Only</option>
+        <option value="warning">Warnings Only</option>
+        <option value="info">Informational</option>
+        <option value="success">Success Notices</option>
+      </select>
+
+      <!-- Read Filter -->
+      <select class="select-filter" id="alertReadFilter">
+        <option value="All">All Statuses</option>
+        <option value="0">Unread Only</option>
+        <option value="1">Read Only</option>
+      </select>
+    </div>
+
+    <button class="btn-action" onclick="loadAlerts()">
+      <i class="fas fa-arrows-rotate"></i> Refresh
+    </button>
+  </div>
+
+  <!-- Alerts List Container -->
+  <div id="alertsListContainer" style="display:flex; flex-direction:column; gap:12px;">
+    <div style="padding:32px; text-align:center; color:var(--text-muted);">
+      Loading alerts...
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/alerts.js') }}"></script>
+{% endblock %}

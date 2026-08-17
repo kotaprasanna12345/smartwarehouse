@@ -1,0 +1,329 @@
+{% extends "layout.html" %}
+
+{% block title %}Warehouse Command Center — SmartStock AI{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-title-group">
+    <h1>Warehouse Command Center</h1>
+    <p>Real-time operational intelligence for smarter fulfillment and dynamic workload balancing.</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn-action" onclick="window.refreshDashboard ? window.refreshDashboard() : window.location.reload()">
+      <i class="fas fa-arrows-rotate"></i> Refresh Telemetry
+    </button>
+    <button class="btn-hero-optimize" onclick="window.triggerOptimizerModal ? window.triggerOptimizerModal() : null">
+      <i class="fas fa-bolt"></i> ⚡ Run 1-Click Optimizer
+    </button>
+  </div>
+</div>
+
+<!-- 1. TOP 8 KPI CARDS -->
+<section class="kpi-grid">
+  <!-- Card 1: Total Products -->
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-label">Total SKUs</span>
+      <div class="kpi-icon primary"><i class="fas fa-boxes-stacked"></i></div>
+    </div>
+    <div class="kpi-value-row">
+      <div class="kpi-value" id="kpiTotalProducts">36</div>
+      <span class="kpi-trend positive"><i class="fas fa-arrow-up"></i> +4.2%</span>
+    </div>
+    <div class="kpi-comparison">Active catalog items</div>
+  </div>
+
+  <!-- Card 2: Inventory Units -->
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-label">Inventory Units</span>
+      <div class="kpi-icon secondary"><i class="fas fa-warehouse"></i></div>
+    </div>
+    <div class="kpi-value-row">
+      <div class="kpi-value" id="kpiInventoryUnits">24,680</div>
+      <span class="kpi-trend positive"><i class="fas fa-arrow-up"></i> +8.4%</span>
+    </div>
+    <div class="kpi-comparison">vs last week</div>
+  </div>
+
+  <!-- Card 3: Pending Orders -->
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-label">Pending Orders</span>
+      <div class="kpi-icon warning"><i class="fas fa-clock"></i></div>
+    </div>
+    <div class="kpi-value-row">
+      <div class="kpi-value" id="kpiPendingOrders">22</div>
+      <span class="kpi-trend neutral">In pipeline</span>
+    </div>
+    <div class="kpi-comparison">Across all active zones</div>
+  </div>
+
+  <!-- Card 4: Orders Fulfilled Today -->
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-label">Fulfilled Today</span>
+      <div class="kpi-icon success"><i class="fas fa-truck-ramp-box"></i></div>
+    </div>
+    <div class="kpi-value-row">
+      <div class="kpi-value" id="kpiFulfilledOrders">8</div>
+      <span class="kpi-trend positive"><i class="fas fa-arrow-up"></i> +12%</span>
+    </div>
+    <div class="kpi-comparison">Dispatched on schedule</div>
+  </div>
+
+  <!-- Card 5: Low Stock Items -->
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-label">Critical / Low Stock</span>
+      <div class="kpi-icon danger"><i class="fas fa-triangle-exclamation"></i></div>
+    </div>
+    <div class="kpi-value-row">
+      <div class="kpi-value" id="kpiLowStock">6</div>
+      <span class="kpi-trend negative"><i class="fas fa-exclamation"></i> Action Req</span>
+    </div>
+    <div class="kpi-comparison">Requires replenishment</div>
+  </div>
+
+  <!-- Card 6: Picking Efficiency -->
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-label">Pick Efficiency</span>
+      <div class="kpi-icon info"><i class="fas fa-bullseye"></i></div>
+    </div>
+    <div class="kpi-value-row">
+      <div class="kpi-value" id="kpiPickEfficiency">98.6%</div>
+      <span class="kpi-trend positive"><i class="fas fa-arrow-up"></i> +1.1%</span>
+    </div>
+    <div class="kpi-comparison">Accuracy target 98.0%</div>
+  </div>
+
+  <!-- Card 7: Average Fulfillment Time -->
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-label">Avg Fulfill Time</span>
+      <div class="kpi-icon primary"><i class="fas fa-stopwatch"></i></div>
+    </div>
+    <div class="kpi-value-row">
+      <div class="kpi-value" id="kpiAvgFulfillment">7.4 min</div>
+      <span class="kpi-trend positive"><i class="fas fa-arrow-down"></i> -18s</span>
+    </div>
+    <div class="kpi-comparison">From order to packing bay</div>
+  </div>
+
+  <!-- Card 8: On-Time Shipment Rate -->
+  <div class="kpi-card">
+    <div class="kpi-card-header">
+      <span class="kpi-label">On-Time Rate</span>
+      <div class="kpi-icon success"><i class="fas fa-shield-halved"></i></div>
+    </div>
+    <div class="kpi-value-row">
+      <div class="kpi-value" id="kpiOnTimeRate">98.4%</div>
+      <span class="kpi-trend positive"><i class="fas fa-check"></i> SLA Met</span>
+    </div>
+    <div class="kpi-comparison">Tier-1 logistics standard</div>
+  </div>
+</section>
+
+<!-- 2. REAL-TIME OPERATIONAL HEALTH & GAUGES -->
+<section class="health-command-card">
+  <div class="health-summary-col">
+    <div class="health-badge-header">
+      <div class="health-score-circle" id="overallHealthCircle">
+        <div class="health-score-inner">
+          <span class="health-score-number" id="overallHealthScore">92%</span>
+          <span class="health-score-label">Health</span>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:1.15rem; font-weight:800; font-family:'Outfit', sans-serif;">Operational Health</h3>
+        <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">AI Telemetry Risk Scoring</p>
+        <div style="margin-top:8px;">
+          <span class="risk-level-badge low" id="riskLevelBadge">LOW RISK</span>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:0.78rem; color:var(--text-muted); line-height:1.45; margin-top:14px;">
+      Dynamic risk engine evaluates stockout velocity, picker-to-congestion ratios, and active delivery SLA timers.
+    </div>
+  </div>
+
+  <div class="health-gauges-col">
+    <!-- Gauge 1: Operational Health -->
+    <div class="gauge-item">
+      <div class="gauge-header">
+        <span>Operational Health</span>
+        <span class="gauge-value" id="gaugeOperationalVal">92%</span>
+      </div>
+      <div class="gauge-bar-bg">
+        <div class="gauge-bar-fill primary" id="gaugeOperationalFill" style="width:92%;"></div>
+      </div>
+    </div>
+
+    <!-- Gauge 2: Inventory Health -->
+    <div class="gauge-item">
+      <div class="gauge-header">
+        <span>Inventory Health</span>
+        <span class="gauge-value" id="gaugeInventoryVal">87%</span>
+      </div>
+      <div class="gauge-bar-bg">
+        <div class="gauge-bar-fill secondary" id="gaugeInventoryFill" style="width:87%;"></div>
+      </div>
+    </div>
+
+    <!-- Gauge 3: Fulfillment Health -->
+    <div class="gauge-item">
+      <div class="gauge-header">
+        <span>Fulfillment SLA Health</span>
+        <span class="gauge-value" id="gaugeFulfillmentVal">95%</span>
+      </div>
+      <div class="gauge-bar-bg">
+        <div class="gauge-bar-fill success" id="gaugeFulfillmentFill" style="width:95%;"></div>
+      </div>
+    </div>
+
+    <!-- Gauge 4: Warehouse Utilization -->
+    <div class="gauge-item">
+      <div class="gauge-header">
+        <span>Warehouse Utilization</span>
+        <span class="gauge-value" id="gaugeUtilizationVal">78%</span>
+      </div>
+      <div class="gauge-bar-bg">
+        <div class="gauge-bar-fill warning" id="gaugeUtilizationFill" style="width:78%;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. LIVE BOTTLENECK ALERT BANNER -->
+<section id="bottleneckBannerContainer"></section>
+
+<!-- 4. DASHBOARD CHARTS ROW -->
+<section class="charts-grid">
+  <!-- Chart 1: 7-Day Fulfillment Trend -->
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <div class="chart-title-group">
+        <h3>Order Fulfillment Velocity Trend</h3>
+        <p>7-day comparison of orders received vs fulfilled vs SLA baseline</p>
+      </div>
+      <span class="nav-badge primary">7 Days</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="fulfillmentTrendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart 2: Inventory Distribution Doughnut -->
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <div class="chart-title-group">
+        <h3>Inventory Health Split</h3>
+        <p>Stock status distribution across SKUs</p>
+      </div>
+      <a href="{{ url_for('page_inventory') }}" style="font-size:0.75rem; font-weight:600;">Details</a>
+    </div>
+    <div class="chart-container">
+      <canvas id="inventoryDistributionChart"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- 5. WAREHOUSE ZONE PERFORMANCE & LIVE ALERTS -->
+<section class="charts-grid" style="grid-template-columns: 1.4fr 1.6fr;">
+  <!-- Zone Performance Bar Chart -->
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <div class="chart-title-group">
+        <h3>Warehouse Zone Performance</h3>
+        <p>Occupancy % vs Congestion % across active zones</p>
+      </div>
+      <a href="{{ url_for('page_warehouse') }}" style="font-size:0.75rem; font-weight:600;">Open Map</a>
+    </div>
+    <div class="chart-container">
+      <canvas id="zonePerformanceChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Live Smart Alerts Preview Card -->
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <div class="chart-title-group">
+        <h3>Live Operational Alerts</h3>
+        <p>Real-time exception triggers and AI notifications</p>
+      </div>
+      <a href="{{ url_for('page_alerts') }}" class="btn-action" style="font-size:0.75rem;">View All</a>
+    </div>
+    <div id="dashboardAlertsList" style="display:flex; flex-direction:column;">
+      <div style="padding:16px; text-align:center; color:var(--text-muted);">Loading live alerts...</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. ORDER PIPELINE FUNNEL -->
+<section class="pipeline-section">
+  <div style="display:flex; align-items:center; justify-content:space-between;">
+    <div>
+      <h3 style="font-size:1.05rem; font-weight:800; font-family:'Outfit', sans-serif;">Fulfillment Pipeline Stages</h3>
+      <p style="font-size:0.78rem; color:var(--text-muted);">Live order transit flow through warehouse workstations</p>
+    </div>
+    <a href="{{ url_for('page_orders') }}" style="font-size:0.78rem; font-weight:600;">Manage Orders &rarr;</a>
+  </div>
+
+  <div class="pipeline-funnel">
+    <!-- Stage: New -->
+    <div class="pipeline-card stage-new">
+      <span class="pipeline-stage-name">1. New</span>
+      <div class="pipeline-count" id="pipeNew">0</div>
+      <div class="pipeline-indicator"></div>
+    </div>
+
+    <!-- Stage: Allocated -->
+    <div class="pipeline-card stage-allocated">
+      <span class="pipeline-stage-name">2. Allocated</span>
+      <div class="pipeline-count" id="pipeAllocated">0</div>
+      <div class="pipeline-indicator"></div>
+    </div>
+
+    <!-- Stage: Picking -->
+    <div class="pipeline-card stage-picking">
+      <span class="pipeline-stage-name">3. Picking</span>
+      <div class="pipeline-count" id="pipePicking">0</div>
+      <div class="pipeline-indicator"></div>
+    </div>
+
+    <!-- Stage: Packed -->
+    <div class="pipeline-card stage-packed">
+      <span class="pipeline-stage-name">4. Packed</span>
+      <div class="pipeline-count" id="pipePacked">0</div>
+      <div class="pipeline-indicator"></div>
+    </div>
+
+    <!-- Stage: Ready to Ship -->
+    <div class="pipeline-card stage-ready">
+      <span class="pipeline-stage-name">5. Ready</span>
+      <div class="pipeline-count" id="pipeReady">0</div>
+      <div class="pipeline-indicator"></div>
+    </div>
+
+    <!-- Stage: Shipped -->
+    <div class="pipeline-card stage-shipped">
+      <span class="pipeline-stage-name">6. Shipped</span>
+      <div class="pipeline-count" id="pipeShipped">0</div>
+      <div class="pipeline-indicator"></div>
+    </div>
+
+    <!-- Stage: Delayed -->
+    <div class="pipeline-card stage-delayed">
+      <span class="pipeline-stage-name">⚠️ Delayed</span>
+      <div class="pipeline-count" id="pipeDelayed" style="color:var(--danger);">0</div>
+      <div class="pipeline-indicator"></div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
